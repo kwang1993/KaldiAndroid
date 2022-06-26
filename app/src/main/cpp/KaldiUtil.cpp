@@ -86,7 +86,7 @@ JNIEXPORT jstring JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_get
 
 
     LOGE("Get result string", "");
-    jstring s  = (jstring) "";
+    jstring s  = jniEnv->NewStringUTF(""); // 不能强转
     if (bRecording) {
         const char *str = "processing\n";
         s = jniEnv->NewStringUTF(str);
