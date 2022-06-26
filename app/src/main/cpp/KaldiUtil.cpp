@@ -40,7 +40,7 @@ extern "C" {
 //
 //  };
 
-jboolean bRecording = false;
+jboolean bGetResult = JNI_FALSE;
 
 //JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startEngine
 //        (JNIEnv *jniEnv, jclass, jstring model_path) {
@@ -68,7 +68,7 @@ JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_stopEn
 JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startRecognition
         (JNIEnv *jniEnv, jclass) {
 
-    bRecording = true;
+    bGetResult = JNI_TRUE;
     LOGE("Start recognition", "");
 
 };
@@ -76,7 +76,7 @@ JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startR
 JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_stopRecognition
         (JNIEnv *jniEnv, jclass) {
 
-    bRecording = false;
+    bGetResult = JNI_FALSE;
     LOGE("Stop recognition", "");
 
 };
@@ -87,7 +87,7 @@ JNIEXPORT jstring JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_get
 
     LOGE("Get result string", "");
     jstring s  = jniEnv->NewStringUTF(""); // 不能强转
-    if (bRecording) {
+    if (bGetResult) {
         const char *str = "processing\n";
         s = jniEnv->NewStringUTF(str);
     }
