@@ -1,0 +1,8 @@
+//
+// Created by kaicheng.wang on 2022/6/21.
+//
+
+#ifndef KALDIANDROID_LANGUAGE_MODEL_H
+#define KALDIANDROID_LANGUAGE_MODEL_H
+
+#endif //KALDIANDROID_LANGUAGE_MODEL_H
