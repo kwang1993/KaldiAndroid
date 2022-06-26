@@ -105,7 +105,7 @@ void Model::ConfigureV1() {
     disambig_tid_int_rxfilename_ = model_path_ + "/disambig_tid.int";
     words_txt_rxfilename_ = model_path_ + "/words.txt";
     word_boundary_int_rxfilename_ = model_path_ + "/word_boundary.int";
-    rescore_G_carpa_rxfilename_ = model_path_ + "/rescore/G.carpa";
+    rescore_G_carpa_rxfilename_ = model_path_ + "/rescore/G.carpa"; // const arpa LM model
     rescore_G_fst_rxfilename_ = model_path_ + "/rescore/G.fst";
     ivector_final_ie_rxfilename_ = model_path_ + "/ivector/final.ie";
     mfcc_conf_rxfilename_ = model_path_ + "/mfcc.conf";
@@ -140,7 +140,7 @@ void Model::ConfigureV2() {
     word_boundary_int_rxfilename_ = model_path_ + "/graph/phones/word_boundary.int";
     rescore_G_carpa_rxfilename_ = model_path_ + "/rescore/G.carpa";
     rescore_G_fst_rxfilename_ = model_path_ + "/rescore/G.fst";
-    ivector_final_ie_rxfilename_ = model_path_ + "/ivector/final.ie";
+    ivector_final_ie_rxfilename_ = model_path_ + "/ivector/final.ie"; // ivector extractor
     mfcc_conf_rxfilename_ = model_path_ + "/conf/mfcc.conf";
     fbank_conf_rxfilename_ = model_path_ + "/conf/fbank.conf";
     global_cmvn_stats_rxfilename_ = model_path_ + "/am/global_cmvn.stats";
@@ -190,12 +190,144 @@ void Model::ReadDataFiles() {
     }
     decodable_info_ = new kaldi::nnet3::DecodableNnetSimpleLoopedInfo(decodable_opts_, nnet_);
 
-    // ivector
+    // ivector feature info
+    if (stat(ivector_final_ie_rxfilename_.c_str(), &buffer) == 0) {
+        KALDI_LOG << "Loading i-vector extractor from " << ivector_final_ie_rxfilename_;
 
-    // cmvn
+        kaldi::OnlineIvectorExtractionConfig ivector_extraction_opts; // params for online ivector extraction
+        ivector_extraction_opts.splice_config_rxfilename = model_path_ + "/ivector/splice.conf";
+        ivector_extraction_opts.cmvn_config_rxfilename = model_path_ + "/ivector/online_cmvn.conf";
+        ivector_extraction_opts.lda_mat_rxfilename = model_path_ + "/ivector/final.mat";
+        ivector_extraction_opts.global_cmvn_stats_rxfilename = model_path_ + "/ivector/global_cmvn.stats";
+        ivector_extraction_opts.diag_ubm_rxfilename = model_path_ + "/ivector/final.dubm";
+        ivector_extraction_opts.ivector_extractor_rxfilename = model_path_ + "/ivector/final.ie";
+        ivector_extraction_opts.max_count = 100;
+
+        feature_info_.use_ivectors = true;
+        feature_info_.ivector_extractor_info.Init(ivector_extraction_opts);
+    } else {
+        feature_info_.use_ivectors = false;
+    }
+    // cmvn feature info
+    if (stat(global_cmvn_stats_rxfilename_.c_str(), &buffer) == 0) {
+        KALDI_LOG << "Reading CMVN stats from " << global_cmvn_stats_rxfilename_;
+        feature_info_.use_cmvn = true;
+        kaldi::ReadKaldiObject(global_cmvn_stats_rxfilename_, &feature_info_.global_cmvn_stats);
+        //        bool binary_in;
+        //        Input ki(filename, &binary_in);
+        //        c->Read(ki.Stream(), binary_in);
+    }
     // pitch
-    // HCLG
-    // words
-    // RNN rescoring
+    if (stat(pitch_conf_rxfilename_.c_str(), &buffer) == 0) {
+        KALDI_LOG << "Using pitch in feature pipeline";
+        feature_info_.add_pitch = true;
+        kaldi::ReadConfigsFromFile(pitch_conf_rxfilename_,
+                                   &feature_info_.pitch_opts,
+                                   &feature_info_.pitch_process_opts);
+        //        std::ostringstream usage_str;
+        //        usage_str << "Parsing config from "
+        //                  << "from '" << conf << "'";
+        //        ParseOptions po(usage_str.str().c_str());
+        //        c1->Register(&po);
+        //        c2->Register(&po);
+        //        po.ReadConfigFile(conf);
 
+    }
+
+    // HCLG
+    if (stat(HCLG_fst_rxfilename_.c_str(), &buffer) == 0) {
+        KALDI_LOG << "Loading HCLG from " << HCLG_fst_rxfilename_;
+        HCLG_fst_ = fst::ReadFstKaldiGeneric(HCLG_fst_rxfilename_); // Create const FST or vector FST
+    } else {
+        KALDI_LOG << "Loading HCL and G from " <<HCLr_fst_rxfilename_ << " " << Gr_fst_rxfilename_;
+        HCLr_fst_ = fst::StdFst::Read(HCLr_fst_rxfilename_);
+        Gr_fst_ = fst::StdFst::Read(Gr_fst_rxfilename_);
+        kaldi::ReadIntegerVectorSimple(disambig_tid_int_rxfilename_, &disambig_);
+    }
+
+    // word symbols
+    if (HCLG_fst_ && HCLG_fst_->OutputSymbols()) {
+        word_syms_ = HCLG_fst_->OutputSymbols();
+    } else if (Gr_fst_ && Gr_fst_->OutputSymbols()) {
+        word_syms_ = Gr_fst_->OutputSymbols();
+    }
+    if (! word_syms_) {
+        KALDI_LOG << "Loading words from " << words_txt_rxfilename_;
+        if (! (word_syms_ = fst:SymbolTable::ReadText(words_txt_rxfilename_))) {
+            KALDI_ERR << "Could not read symbol table from file "
+                      << words_txt_rxfilename_;
+        }
+        word_syms_loaded_ = word_syms_; // boolean = ptr
+    }
+    KALDI_ASSERT(word_syms_);
+
+    // word boundary info
+    if (stat(word_boundary_int_rxfilename_.c_str(), &buffer) == 0) {
+        KALDI_LOG << "Loading word boundary info " << word_boundary_int_rxfilename_;
+        kaldi::WordBoundaryInfoNewOpts otps;
+        word_boundary_info_ = new kaldi::WordBoundaryInfo(opts, word_boundary_int_rxfilename_);
+    }
+
+    // rescore G fst, const arpa model
+    if (stat(rescore_G_carpa_rxfilename_.c_str(), &buffer) == 0) {
+        KALDI_LOG << "Loading subtract G.fst model from " << rescore_G_fst_rxfilename_;
+        graph_lm_fst_ = fst::ReadAndPrepareLmFst(rescore_G_fst_rxfilename_);
+        KALDI_LOG << "Loading const ARPA model from " << rescore_G_carpa_rxfilename_;
+        kaldi::ReadKaldiObject(rescore_G_carpa_rxfilename_, &const_arpa_);
+    }
+
+    // RNN rescoring
+    if (stat(rnnlm_final_raw_rxfilename_.c_str(), &buffer) == 0) {
+        KALDI_LOG << "Loading RNNLM model from " << rnnlm_final_raw_rxfilename_;
+        kaldi::ReadKaldiObject(rnnlm_final_raw_rxfilename_, &rnnlm_);
+
+        Matrix<BaseFloat> feature_embedding_mat;
+        kaldi::ReadKaldiObject(rnnlm_feat_embedding_final_mat_rxfilename_, &feature_embedding_mat);
+
+        SparseMatrix<BaseFloat> word_feature_mat;
+        {
+            Input input(rnnlm_word_feats_rxfilename_);
+            int32 feature_dim = feature_embedding_mat.NumRows();
+            rnnlm::ReadSparseWordFeatures(input.Stream(), feature_dim, &word_feature_mat);
+        }
+        Matrix<BaseFloat> wm(word_feature_mat.NumRows(), feature_embedding_mat.NumCols());
+        wm.AddSmatMat(1.0, word_feature_mat, kNoTrans, feature_embedding_mat, 0.0);
+        word_embedding_mat_.Resize(wm.NumRows(), wm.NumCols(), kUndefined);
+        word_embedding_mat_.CopyFromMat(wm);
+
+        kaldi::ReadConfigFromFile(rnnlm_special_symbol_opts_conf_rxfilename_, &rnnlm_compute_opts_);
+        rnnlm_enabled_ = true;
+    }
+}
+
+Model::~Model() {
+    delete trans_model_;
+    delete nnet_;
+    delete decodable_info_;
+    delete HCLG_fst_;
+    delete HCLr_fst_;
+    delete Gr_fst_;
+    delete graph_lm_fst_;
+    delete word_boundary_info_;
+    if (word_syms_loaded_) {
+        delete word_syms_;
+    }
+
+}
+
+int Model::FindWord(const char *word) {
+    if (!word_syms_)
+        return -1;
+    reutrn word_syms_->Find(word);
+}
+
+void Model::Ref() {
+    std::atomic_fetch_add_explicit(&ref_cnt_, 1, std::memory_order_relaxed);
+}
+
+void Model::Unref() {
+    if (std::atomic_fetch_sub_explicit(&ref_cnt_, 1, std::memory_order_release) == 1) {
+        std::atomic_thread_fence(std::memory_order_acquire);
+        delete this;
+    }
 }

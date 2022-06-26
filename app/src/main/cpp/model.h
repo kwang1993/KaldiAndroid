@@ -14,7 +14,9 @@ class Model {
 
 public:
     Model(const char* model_path);
-
+    int FindWord(const char* word);
+    void Ref();
+    void Unref();
 private:
     ~Model();
     void ConfigureV1();
@@ -50,6 +52,23 @@ private:
     kaldi::nnet3::AmNnetSimple* nnet_ = nullptr;
     kaldi::nnet3::DecodableNnetSimpleLoopedInfo* decodable_info_ = nullptr;
 
+    fst::Fst<fst::StdArc>* HCLG_fst_ = nullptr;
+    fst::Fst<fst::StdArc>* HCLr_fst_ = nullptr;
+    fst::Fst<fst::StdArc>* Gr_fst_ = nullptr;
+    vector<int32> disambig_;
+    const fst::SymbolTable* word_syms_ = nullptr;
+    bool word_syms_loaded_ = false;
+    kaldi::WordBoundaryInfo *word_boundary_info_ = nullptr;
+
+    fst::VectorFst<fst::StdArc>* graph_lm_fst_ = nullptr;
+    kaldi::ConstArpaLm const_arpa_;
+
+    kaldi::nnet3::Nnet rnnlm_;
+    CuMatrix<BaseFloat> word_embedding_mat_;
+    kaldi::rnnlm::RnnlmComputeStateComputationOptions rnnlm_compute_opts_;
+    bool rnnlm_enabled_ = false;
+
+    std::atomic<int> ref_cnt_;
 };
 
 #endif // KALDIANDROID_MODEL_H
