@@ -5,15 +5,69 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <ToggleButton
+            android:id="@+id/startStop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textOff="Start"
+            android:textOn="Stop"
+            android:background="@color/purple_500"
+            android:textColor="@color/white"
+            android:layout_margin="5dp"/>/>
+        <Button
+            android:id="@+id/replay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Replay"
+            android:background="@color/purple_500"
+            android:textColor="@color/white"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginBottom="5dp"/>
+        <Button
+            android:id="@+id/delete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            android:background="@color/purple_500"
+            android:textColor="@color/white"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginBottom="5dp"/>
+        <Button
+            android:id="@+id/clear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:background="@color/purple_500"
+            android:textColor="@color/white"
+            android:layout_marginHorizontal="5dp"
+            android:layout_marginBottom="5dp"/>
+        <EditText
+            android:id="@+id/state"
+            android:gravity="top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:text=""/>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+            <EditText
+                android:id="@+id/screen"
+                android:gravity="top"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusable="false"
+                android:text=""
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
 
-    <TextView
-        android:id="@+id/screen"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        </ScrollView>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

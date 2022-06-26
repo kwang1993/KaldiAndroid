@@ -191,7 +191,7 @@ void Model::ReadDataFiles() {
     decodable_info_ = new kaldi::nnet3::DecodableNnetSimpleLoopedInfo(decodable_opts_, nnet_);
 
     // ivector
-    
+
     // cmvn
     // pitch
     // HCLG

@@ -42,10 +42,17 @@ extern "C" {
 
 jboolean bRecording = false;
 
+//JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startEngine
+//        (JNIEnv *jniEnv, jclass, jstring model_path) {
+//    Model* model = new Model(jniEnv->GetStringUTFChars(model_path, 0));
+//    Recognizer* recognizer = new Recognizer(model);
+//    LOGE("Start engine", "");
+//
+//};
+
 JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startEngine
-        (JNIEnv *jniEnv, jclass, jstring model_path) {
-    Model* model = new Model(jniEnv->GetStringUTFChars(model_path, 0));
-    Recognizer* recognizer = new Recognizer(model);
+        (JNIEnv *jniEnv, jclass) {
+
     LOGE("Start engine", "");
 
 };
