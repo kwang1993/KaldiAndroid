@@ -92,7 +92,8 @@ set_target_properties(libkaldi-util PROPERTIES IMPORTED_LOCATION
 
 # 自己编写的本地方法类
 add_library(KaldiUtil SHARED
-            KaldiUtil.cpp) # 相对CMakeLists.txt的路径
+            KaldiUtil.cpp )
+            #model.cpp) # 相对CMakeLists.txt的路径
 target_include_directories(KaldiUtil PRIVATE
         ${KALDI_DIR}/head) # 【src/main/cpp/kaldi/head】，自定义本地方法中 include头文件 拼接的路径
 

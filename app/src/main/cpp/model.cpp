@@ -30,10 +30,10 @@ Model::Model(const char* model_path): model_path_(model_path) {
     //    --allow-downsample=true
 
     struct stat buffer; // <sys/stat.h> check file existing stat
-    if (stat(am_path_v2.c_str(), &buffer) == 0) && (stat(model_conf_path_v2.c_str(), &buffer) == 0) {
+    if (stat(am_path_v2.c_str(), &buffer) == 0 && stat(model_conf_path_v2.c_str(), &buffer) == 0) {
         ConfigureV2();
         ReadDataFiles();
-    } else if (stat(am_path_v1.c_str(), &buffer) == 0) && (stat(mfcc_path_v1.c_str(), &buffer) == 0) {
+    } else if (stat(am_path_v1.c_str(), &buffer) == 0 && stat(mfcc_path_v1.c_str(), &buffer) == 0) {
         ConfigureV1();
         ReadDataFiles();
     } else {
@@ -253,7 +253,7 @@ void Model::ReadDataFiles() {
     }
     if (! word_syms_) {
         KALDI_LOG << "Loading words from " << words_txt_rxfilename_;
-        if (! (word_syms_ = fst:SymbolTable::ReadText(words_txt_rxfilename_))) {
+        if (! (word_syms_ = fst::SymbolTable::ReadText(words_txt_rxfilename_))) {
             KALDI_ERR << "Could not read symbol table from file "
                       << words_txt_rxfilename_;
         }
@@ -264,7 +264,7 @@ void Model::ReadDataFiles() {
     // word boundary info
     if (stat(word_boundary_int_rxfilename_.c_str(), &buffer) == 0) {
         KALDI_LOG << "Loading word boundary info " << word_boundary_int_rxfilename_;
-        kaldi::WordBoundaryInfoNewOpts otps;
+        kaldi::WordBoundaryInfoNewOpts opts;
         word_boundary_info_ = new kaldi::WordBoundaryInfo(opts, word_boundary_int_rxfilename_);
     }
 
@@ -318,7 +318,7 @@ Model::~Model() {
 int Model::FindWord(const char *word) {
     if (!word_syms_)
         return -1;
-    reutrn word_syms_->Find(word);
+    return word_syms_->Find(word);
 }
 
 void Model::Ref() {
