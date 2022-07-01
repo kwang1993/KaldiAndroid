@@ -154,7 +154,7 @@
 // #include "fst/flags.h"
 // #include "fst/float-weight.h"
 // #include "fst/fst-decl.h"
-// #include "fst/fst.h"
+ #include "fst/fst.h"
 // #include "fst/fstlib.h"
 // #include "fst/generic-register.h"
 // #include "fst/heap.h"
@@ -171,7 +171,7 @@
 // #include "fst/lookahead-matcher.h"
 // #include "fst/map.h"
 // #include "fst/mapped-file.h"
-// #include "fst/matcher-fst.h"
+ #include "fst/matcher-fst.h"
 // #include "fst/matcher.h"
 // #include "fst/memory.h"
 // #include "fst/minimize.h"
@@ -188,7 +188,7 @@
 // #include "fst/randequivalent.h"
 // #include "fst/randgen.h"
 // #include "fst/rational.h"
-// #include "fst/register.h"
+ #include "fst/register.h"
 // #include "fst/relabel.h"
 // #include "fst/replace-util.h"
 // #include "fst/replace.h"
@@ -255,6 +255,8 @@
 // #include "fstext/remove-eps-local.h"
 // #include "fstext/table-matcher.h"
 // #include "fstext/trivial-factor-weight.h"
+
+ #include "fst/extensions/ngram/ngram-fst.h"
 
 // GMM (对角阵高斯混合) 模型基础类
 // #include "gmm/am-diag-gmm.h"

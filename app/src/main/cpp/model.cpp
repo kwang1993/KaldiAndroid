@@ -276,7 +276,7 @@ void Model::ReadDataFiles() {
         kaldi::ReadKaldiObject(rescore_G_carpa_rxfilename_, &const_arpa_);
     }
 
-    // RNN rescoring
+    // RNN rescoring ???
     if (stat(rnnlm_final_raw_rxfilename_.c_str(), &buffer) == 0) {
         KALDI_LOG << "Loading RNNLM model from " << rnnlm_final_raw_rxfilename_;
         kaldi::ReadKaldiObject(rnnlm_final_raw_rxfilename_, &rnnlm_);
@@ -323,11 +323,26 @@ int Model::FindWord(const char *word) {
 
 void Model::Ref() {
     std::atomic_fetch_add_explicit(&ref_cnt_, 1, std::memory_order_relaxed);
+    // 多线程内存序
+    //    typedef enum memory_order {
+    //        memory_order_relaxed, // 只保证此操作是原子的，不对执行顺序做保证
+    //        memory_order_acquire, // 本线程中,所有后续的读操作必须在本条原子操作完成后执行
+    //        memory_order_release, // 本线程中,所有之前的写操作完成后才能执行本条原子操作
+    //        memory_order_acq_rel, // 同时包含 memory_order_acquire 和 memory_order_release
+    //        memory_order_consume, // 本线程中,所有后续的有关本原子类型的操作,必须在本条原子操作完成之后执行
+    //        memory_order_seq_cst // 全部存取都按顺序执行
+    //    } memory_order;
+
 }
 
 void Model::Unref() {
     if (std::atomic_fetch_sub_explicit(&ref_cnt_, 1, std::memory_order_release) == 1) {
         std::atomic_thread_fence(std::memory_order_acquire);
+        // 内存屏障防止重排前后内存操作
+        // full fence 默认: 防止重排序LoadLoad, LoadStore, StoreStore，不防止重排序 StoreLoad
+        // acquire fence:  防止重排序LoadLoad, LoadStore，不防止重排序 StoreLoad, StoreStore
+        // release fence: 防止重排序LoadStore, StoreStore，不防止重排序 StoreLoad, LoadLoad
+
         delete this;
     }
 }
