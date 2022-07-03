@@ -27,6 +27,8 @@ private:
     bool AcceptWaveform(Vector<BaseFloat>& wave);
     void CleanUp();
     void UpdateSilenceWeights();
+    const char *StoreEmptyReturn();
+    const char* GetResult();
 
     Model* model_ = nullptr;
     string last_result_;
