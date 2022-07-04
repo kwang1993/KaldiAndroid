@@ -74,9 +74,9 @@ add_library(libkaldi-rnnlm SHARED IMPORTED)
 set_target_properties(libkaldi-rnnlm PROPERTIES IMPORTED_LOCATION
         ${KALDI_DIR}/lib/${ANDROID_ABI}/libkaldi-rnnlm.so)
 
-add_library(libkaldi-sgmm2 SHARED IMPORTED)
-set_target_properties(libkaldi-sgmm2 PROPERTIES IMPORTED_LOCATION
-        ${KALDI_DIR}/lib/${ANDROID_ABI}/libkaldi-sgmm2.so)
+add_library(libkaldi-cudamatrix SHARED IMPORTED)
+set_target_properties(libkaldi-cudamatrix PROPERTIES IMPORTED_LOCATION
+        ${KALDI_DIR}/lib/${ANDROID_ABI}/libkaldi-cudamatrix.so)
 
 add_library(libkaldi-transform SHARED IMPORTED)
 set_target_properties(libkaldi-transform PROPERTIES IMPORTED_LOCATION
@@ -92,8 +92,9 @@ set_target_properties(libkaldi-util PROPERTIES IMPORTED_LOCATION
 
 # 自己编写的本地方法类
 add_library(KaldiUtil SHARED
-            KaldiUtil.cpp )
-            #model.cpp) # 相对CMakeLists.txt的路径
+            KaldiUtil.cpp
+            model.cpp
+            recognizer.cpp) # 相对CMakeLists.txt的路径
 target_include_directories(KaldiUtil PRIVATE
         ${KALDI_DIR}/head) # 【src/main/cpp/kaldi/head】，自定义本地方法中 include头文件 拼接的路径
 
@@ -104,24 +105,24 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 target_link_libraries(KaldiUtil
                       android
                       libkaldi-base # 对应本例演示用的 base/kaldi-math.h
-                    #  libkaldi-chain
-                    #  libkaldi-decoder
-                    #  libkaldi-feat
-                    #  libkaldi-fstext
-                    #  libkaldi-gmm
-                    #  libkaldi-hmm
-                    #  libkaldi-ivector
-                    #  libkaldi-kws
-                    #  libkaldi-lat
-                    #  libkaldi-lm
-                    #  libkaldi-matrix
-                    #  libkaldi-nnet
-                    #  libkaldi-nnet2
-                    #  libkaldi-nnet3
-                    #  libkaldi-online2
-                    #  libkaldi-rnnlm
-                    #  libkaldi-sgmm2
-                    #  libkaldi-transform
-                    #  libkaldi-tree
-                    #  libkaldi-util
+                      libkaldi-chain
+                      libkaldi-cudamatrix
+                      libkaldi-decoder
+                      libkaldi-feat
+                      libkaldi-fstext
+                      libkaldi-gmm
+                      libkaldi-hmm
+                      libkaldi-ivector
+                      libkaldi-kws
+                      libkaldi-lat
+                      libkaldi-lm
+                      libkaldi-matrix
+                      libkaldi-nnet
+                      libkaldi-nnet2
+                      libkaldi-nnet3
+                      libkaldi-online2
+                      libkaldi-rnnlm
+                      libkaldi-transform
+                      libkaldi-tree
+                      libkaldi-util
                       log)

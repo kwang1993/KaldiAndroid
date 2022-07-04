@@ -23,6 +23,8 @@ private:
     void ConfigureV2();
     void ReadDataFiles();
 
+    friend class Recognizer;
+
     string model_path_;
     string final_mdl_rxfilename_;
     string HCLG_fst_rxfilename_;

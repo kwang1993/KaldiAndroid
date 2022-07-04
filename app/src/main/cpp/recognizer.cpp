@@ -1,5 +1,3 @@
-#ifndef
-
 #include "recognizer.h"
 #include "json.h"
 #include "language_model.h"
@@ -73,7 +71,7 @@ void Recognizer::InitRescoring() { // ?????
     }
 }
 
-bool Recognizer::AcceptWaveForm(const short *sdata, int len) {
+bool Recognizer::AcceptWaveform(const short *sdata, int len) {
     Vector<BaseFloat> wave;
     wave.Resize(len, kUndefined);
     //    typedef enum {
@@ -87,7 +85,7 @@ bool Recognizer::AcceptWaveForm(const short *sdata, int len) {
     return AcceptWaveform(wave);
 }
 
-bool Recognizer::AcceptWaveForm(Vector<BaseFloat> &wave) {
+bool Recognizer::AcceptWaveform(Vector<BaseFloat> &wave) {
     // Cleanup if we finalized previous utterance or the whole feature pipeline
     if (!(state_ == RECOGNIZER_RUNNING || state_ == RECOGNIZER_INITIALIZED)) {
         CleanUp();
@@ -120,7 +118,7 @@ void Recognizer::CleanUp() {
         frame_offset_ += decoder_->NumFramesDecoded();
     }
     if (decoder_ == nullptr || state_ == RECOGNIZER_FINALIZED || frame_offset_ > 20000) {
-        samples_round_start_ += samples_processed;
+        samples_round_start_ += samples_processed_;
         samples_processed_ = 0;
         frame_offset_ = 0;
 
@@ -188,21 +186,21 @@ const char* Recognizer::GetResult() { // ?????
         // Delete old score
         ConvertLattice(clat, &lat);
         fst::ScaleLattice(fst::GraphLatticeScale(-1.0), &lat);
-        fst::Compose(lat, *lm_to_subtract, &composed_lat);
+        fst::Compose(lat, *lm_to_subtract_, &composed_lat);
         fst::Invert(&composed_lat);
         DeterminizeLattice(composed_lat, &slat);
         fst::ScaleLattice(fst::GraphLatticeScale(-1.0), &slat);
 
         // Add CARPA score
         TopSortCompactLatticeIfNeeded(&slat);
-        ComposeCompactLatticeDeterministic(slat, capra_to_add_, &tlat);
+        ComposeCompactLatticeDeterministic(slat, carpa_to_add_, &tlat);
 
         // Rescore with RNNLM score on top if needed
         if (rnnlm_to_add_scale_) {
             ComposeLatticePrunedOptions compose_opts;
             compose_opts.lattice_compose_beam = 3.0;
             compose_opts.max_arcs = 3000;
-            fst::ComposeDeterministicOnDemandFst<StdArc> combined_rnnlm(carpa_to_add_scale_, rnnlm_to_add_scale_);
+            fst::ComposeDeterministicOnDemandFst<fst::StdArc> combined_rnnlm(carpa_to_add_scale_, rnnlm_to_add_scale_);
 
             TopSortCompactLatticeIfNeeded(&tlat);
             ComposeCompactLatticePruned(compose_opts, tlat,
@@ -231,22 +229,146 @@ const char* Recognizer::GetResult() { // ?????
     }
 }
 
-const char *Recognizer::NbestResult(CompactLattice &rlat){
+static bool CompactLatticeToWordAlignmentWeight(const CompactLattice &clat,
+                                                std::vector<int32> *words,
+                                                std::vector<int32> *begin_times,
+                                                std::vector<int32> *lengths,
+                                                CompactLattice::Weight *tot_weight_out) {
+
+    typedef CompactLattice::Arc Arc;
+    typedef Arc::Label Label;
+    typedef CompactLattice::StateId StateId;
+    typedef CompactLattice::Weight Weight;
+    using namespace fst;
+
+    words->clear();
+    begin_times->clear();
+    lengths->clear();
+    *tot_weight_out = Weight::Zero();
+
+    StateId state = clat.Start();
+    Weight tot_weight = Weight::One();
+
+    int32 cur_time = 0;
+    if (state == kNoStateId) {
+        KALDI_WARN << "Empty lattice.";
+        return false;
+    }
+    while(1) {
+        Weight final = clat.Final(state);
+        size_t num_arcs = clat.NumArcs(state);
+        if (final != Weight::Zero()) {
+            if (num_arcs != 0) {
+                KALDI_WARN << "Lattice is not linear.";
+                return false;
+            }
+            if (!final.String().empty()) {
+                KALDI_WARN << "Lattice has alignments on final-weight: probably "
+                              "was not word-aligned (alignments will be approximate)";
+            }
+            tot_weight = Times(final, tot_weight);
+            *tot_weight_out = tot_weight;
+            return true;
+        } else {
+            if (num_arcs != 1) {
+                KALDI_WARN << "Lattice is not linear: num-arcs = " << num_arcs;
+                return false;
+            }
+            fst::ArcIterator<CompactLattice> aiter(clat, state);
+            const Arc & arc = aiter.Value();
+            Label word_id = arc.ilabel;// Note: ilabel==olabel, since acceptor.
+            // Also note: word_id may be zero; we output it anyway.
+            int32 length = arc.weight.String().size();
+            words->push_back(word_id);
+            begin_times->push_back(cur_time);
+            lengths->push_back(length);
+            tot_weight = Times(arc.weight, tot_weight);
+            cur_time += length;
+            state = arc.nextstate;
+        }
+    }
+}
+
+const char *Recognizer::NbestResult(CompactLattice &clat){
+    Lattice lat, nbest_lat;
+    std::vector<Lattice> nbest_lats;
+
+    ConvertLattice(clat, &lat);
+    fst::ShortestPath(lat, &nbest_lat, max_alternatives_);
+    fst::ConvertNbestToVector(nbest_lat, &nbest_lats);
+
+    json::JSON obj;
+    for (int k = 0; k < nbest_lats.size(); ++k) {
+        Lattice nlat = nbest_lats[k];
+
+        CompactLattice nclat;
+        fst::Invert(&nlat);
+        DeterminizeLattice(nlat, &nclat);
+
+        CompactLattice aligned_nclat;
+        if (model_->word_boundary_info_) {
+            WordAlignLattice(nclat,
+                             *model_->trans_model_,
+                             *model_->word_boundary_info_,
+                             0,
+                             &aligned_nclat);
+            //        const CompactLattice & 	lat,
+            //        const TransitionModel & 	tmodel,
+            //        const WordBoundaryInfo & 	info,
+            //        int32 	max_states,
+            //        CompactLattice * 	lat_out
+
+        } else {
+            aligned_nclat = nclat;
+        }
+
+        std::vector<int32> words, begin_times, lengths;
+        CompactLattice::Weight weight;
+
+        CompactLatticeToWordAlignmentWeight(aligned_nclat, &words, &begin_times, &lengths, &weight);
+        float likelihood = - (weight.Weight().Value1() + weight.Weight().Value2());
+
+        stringstream text;
+        json::JSON entry;
+
+        for (int i = 0, first = 1; i < words.size(); ++i ) {
+            json::JSON word;
+            if (words[i] == 0) {
+                continue;
+            }
+            if (words_) {
+                word["word"] = model_->word_syms_->Find(words[i]);
+                word["start"] = samples_round_start_ / sampling_frequency_ + (frame_offset_ + begin_times[i]) * 0.03;
+                word["end"] = samples_round_start_ / sampling_frequency_ + (frame_offset_ + begin_times[i] +lengths[i]) * 0.03;
+                entry["result"].append(word);
+            }
+            if (first) {
+                first = 0;
+            } else {
+                text << " ";
+            }
+            text << model_->word_syms_->Find(words[i]);
+        }
+        entry["text"] = text.str();
+        entry["confidence"] = likelihood;
+        obj["alternatives"].append(entry);
+    }
+    return StoreReturn(obj.dump());
+}
+
+const char *Recognizer::MbrResult(CompactLattice &clat){
     //todo
 }
 
-const char *Recognizer::MbrResult(CompactLattice &rlat){
+const char *Recognizer::NlsmlResult(CompactLattice &clat){
     //todo
 }
 
-const char *Recognizer::NlsmlResult(CompactLattice &rlat){
-    //todo
-}
 
 
 const char *Recognizer::StoreEmptyReturn() {
-    if (! max_alternatves_) {
-        return StoreReturn("{\"text\": \"\"}")
+    if (!max_alternatives_) {
+        return StoreReturn("{\"text\": \"\"}");
     } else if (nlsml_) {
         return StoreReturn("<?xml version=\"1.0\"?>\n"
                            "<result grammar=\"default\">\n"
@@ -325,7 +447,8 @@ Recognizer::~Recognizer() {
     delete rnnlm_to_add_scale_;
 
     model_->Unref();
-    if (spk_model_) {
-        spk_model_->Unref();
-    }
+    //if (spk_model_) {
+    //    spk_model_->Unref();
+    //}
 }
+

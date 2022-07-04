@@ -44,7 +44,9 @@ private:
     kaldi::OnlineSilenceWeighting *silence_weighting_ = nullptr; // weighting silence in ivector adaptation
     fst::LookaheadFst<fst::StdArc, int32> *decode_fst_ = nullptr;
     kaldi::SingleUtteranceNnet3IncrementalDecoder *decoder_ = nullptr;
-    kaldi::OnlineBaseFeature *spk_feature_ = nullptr;
+    // Speaker identification
+    //SpkModel *spk_model_ = nullptr;
+    OnlineBaseFeature *spk_feature_ = nullptr;
     // Rescoring
     fst::ArcMapFst<fst::StdArc, LatticeArc, fst::StdToLatticeMapper<BaseFloat> > *lm_to_subtract_ = nullptr;
     kaldi::ConstArpaLmDeterministicFst *carpa_to_add_ = nullptr;
