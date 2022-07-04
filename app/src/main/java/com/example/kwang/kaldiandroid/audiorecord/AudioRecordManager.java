@@ -5,6 +5,7 @@ import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.telecom.Call;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -64,12 +65,13 @@ public class AudioRecordManager {
         }
     }
 
-    public void startRecording(String filePath, AudioParams params) {
+    public void startRecording(String filePath, AudioParams params, RecordCallback callback) {
         int channelCount = params.getChannelCount();
         int bits = params.getBits();
         boolean bStoreFile = filePath != null && !filePath.isEmpty();
 
         startRecording(params, (buffer, len)-> {
+
             if (bStoreFile) {
                 if (dos == null) {
                     File f = new File(filePath);
@@ -103,10 +105,11 @@ public class AudioRecordManager {
                     }
                 }
             }
+            callback.onRecord(buffer, len);
         });
     }
-    public void startRecording(String filePath) {
-        startRecording(filePath, DEFAULT_FORMAT);
+    public void startRecording(String filePath, RecordCallback callback) {
+        startRecording(filePath, DEFAULT_FORMAT, callback);
     }
 
     public void stopRecording() {

@@ -41,18 +41,14 @@ extern "C" {
 //  };
 
 jboolean bGetResult = JNI_FALSE;
+Model* model = nullptr;
+Recognizer* recognizer = nullptr;
 
-//JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startEngine
-//        (JNIEnv *jniEnv, jclass, jstring model_path) {
-//    Model* model = new Model(jniEnv->GetStringUTFChars(model_path, 0));
-//    Recognizer* recognizer = new Recognizer(model);
-//    LOGE("Start engine", "");
-//
-//};
 
 JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startEngine
-        (JNIEnv *jniEnv, jclass) {
-
+        (JNIEnv *jniEnv, jclass, jstring model_path) {
+    model = new Model(jniEnv->GetStringUTFChars(model_path, 0));
+    recognizer = new Recognizer(model);
     LOGE("Start engine", "");
 
 };
@@ -60,17 +56,20 @@ JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startE
 JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_stopEngine
         (JNIEnv *jniEnv, jclass) {
 
+    delete recognizer;
 
     LOGE("Stop engine", "");
 
 };
 
 JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startRecognition
-        (JNIEnv *jniEnv, jclass) {
+        (JNIEnv *jniEnv, jclass, jshortArray data, int length) {
 
     bGetResult = JNI_TRUE;
     LOGE("Start recognition", "");
-
+    jboolean *isCopy = JNI_FALSE;
+    const short * sdata = jniEnv->GetShortArrayElements(data, isCopy);
+    recognizer->AcceptWaveform(sdata, length);
 };
 
 JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_stopRecognition
@@ -78,9 +77,9 @@ JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_stopRe
 
     bGetResult = JNI_FALSE;
     LOGE("Stop recognition", "");
+    recognizer->Reset();
 
 };
-
 JNIEXPORT jstring JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_getResultString
         (JNIEnv *jniEnv, jclass) {
 
@@ -88,11 +87,55 @@ JNIEXPORT jstring JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_get
     LOGE("Get result string", "");
     jstring s  = jniEnv->NewStringUTF(""); // 不能强转
     if (bGetResult) {
-        const char *str = "processing\n";
+        const char *str = recognizer->Result();
         s = jniEnv->NewStringUTF(str);
     }
     return s;
 };
+
+
+//JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startEngine
+//        (JNIEnv *jniEnv, jclass) {
+//
+//    LOGE("Start engine", "");
+//
+//};
+
+//JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_stopEngine
+//        (JNIEnv *jniEnv, jclass) {
+//
+//
+//    LOGE("Stop engine", "");
+//
+//};
+//JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startRecognition
+//        (JNIEnv *jniEnv, jclass) {
+//
+//    bGetResult = JNI_TRUE;
+//    LOGE("Start recognition", "");
+//
+//};
+//
+//JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_stopRecognition
+//        (JNIEnv *jniEnv, jclass) {
+//
+//    bGetResult = JNI_FALSE;
+//    LOGE("Stop recognition", "");
+//
+//};
+
+//JNIEXPORT jstring JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_getResultString
+//        (JNIEnv *jniEnv, jclass) {
+//
+//
+//    LOGE("Get result string", "");
+//    jstring s  = jniEnv->NewStringUTF(""); // 不能强转
+//    if (bGetResult) {
+//        const char *str = "processing\n";
+//        s = jniEnv->NewStringUTF(str);
+//    }
+//    return s;
+//};
 
 #ifdef __cplusplus
 }

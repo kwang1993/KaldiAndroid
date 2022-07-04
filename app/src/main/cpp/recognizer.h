@@ -23,8 +23,8 @@ public:
     const char* FinalResult();
     const char* PartialResult();
     void Reset();
-private:
     ~Recognizer();
+private:
     void InitState();
     void InitRescoring();
     bool AcceptWaveform(Vector<BaseFloat>& wave);

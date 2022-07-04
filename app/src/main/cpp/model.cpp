@@ -2,7 +2,45 @@
 
 #include <sys/stat.h>
 
+
+#include <android/log.h>
+static void KaldiLogHandler(const LogMessageEnvelope &env, const char *message)
+{
+    int priority;
+    if (env.severity > GetVerboseLevel())
+        return;
+
+    if (env.severity > LogMessageEnvelope::kInfo) {
+        priority = ANDROID_LOG_VERBOSE;
+    } else {
+        switch (env.severity) {
+            case LogMessageEnvelope::kInfo:
+                priority = ANDROID_LOG_INFO;
+                break;
+            case LogMessageEnvelope::kWarning:
+                priority = ANDROID_LOG_WARN;
+                break;
+            case LogMessageEnvelope::kAssertFailed:
+                priority = ANDROID_LOG_FATAL;
+                break;
+            case LogMessageEnvelope::kError:
+            default: // If not the ERROR, it still an error!
+                priority = ANDROID_LOG_ERROR;
+                break;
+        }
+    }
+
+    std::stringstream full_message;
+    full_message << env.func << "():" << env.file << ':'
+                 << env.line << ") " << message;
+
+    __android_log_print(priority, "kwang", "%s", full_message.str().c_str());
+}
+
+
+
 Model::Model(const char* model_path): model_path_(model_path) {
+    SetLogHandler(KaldiLogHandler);
     // new configuration with parameters initialized in model.conf
     string am_path_v2 = model_path_ + "/am/final.mdl";
     string model_conf_path_v2 = model_path_ + "/conf/model.conf"; // create it yourself for default decoding beams and silence phones.

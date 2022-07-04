@@ -24,6 +24,7 @@ import android.widget.ToggleButton;
 
 import com.example.kwang.kaldiandroid.audiorecord.AudioParams;
 import com.example.kwang.kaldiandroid.audiorecord.AudioRecordManager;
+import com.example.kwang.kaldiandroid.audiorecord.KaldiRecordCallback;
 import com.example.kwang.kaldiandroid.audiorecord.RecordCallback;
 import com.example.kwang.kaldiandroid.util.KaldiUtil;
 
@@ -43,7 +44,7 @@ public class MainActivity extends AppCompatActivity{
     private StringBuffer sb = new StringBuffer(); // 存储输出文本
     private AudioRecordManager audioRecordManager = new AudioRecordManager();
     private String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Recordings/audio.wav";
-
+    private String modelPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Recordings/model";
     private EditText screen, state;
     private Button replay, delete, clear;
     private ToggleButton startStop;
@@ -98,34 +99,28 @@ public class MainActivity extends AppCompatActivity{
         state.setText(text);
     }
 
-    private void startRecording() {
+    private void startRecognition() {
         updateButtonState(ButtonState.RECORDING);
-        audioRecordManager.startRecording(filePath);
+        audioRecordManager.startRecording(filePath, new KaldiRecordCallback());
         updateState("Recording started: " + filePath);
 
     }
-    private void stopRecording() {
+    private void stopRecognition() {
         audioRecordManager.stopRecording();
+        KaldiUtil.stopRecognition();
         updateButtonState(ButtonState.IDLE);
         updateState("Recording stopped: " + filePath);
     }
     private void startEngine(){
         getPermissions();
-        KaldiUtil.startEngine();
+        KaldiUtil.startEngine(modelPath);
         updateState("Engine started!");
     }
     private void stopEngine(){
         KaldiUtil.stopEngine();
         updateState("Engine stopped!");
     }
-    private void startRecognition(){
-        startRecording();
-        KaldiUtil.startRecognition();
-    }
-    private void stopRecognition(){
-        stopRecording();
-        KaldiUtil.stopRecognition();
-    }
+
     private String getResultString(){
         return KaldiUtil.getResultString();
     }
@@ -139,7 +134,7 @@ public class MainActivity extends AppCompatActivity{
                     e.printStackTrace();
                 }
                 String text = getResultString();
-                if (text != "") {
+                if (!text.equals("")) {
                     sb.append(text);
                     textHandler.post(() -> screen.setText(sb.toString()));
                 }
