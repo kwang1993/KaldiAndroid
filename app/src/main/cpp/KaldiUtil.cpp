@@ -41,14 +41,13 @@ extern "C" {
 //  };
 
 jboolean bGetResult = JNI_FALSE;
-Model* model = nullptr;
 Recognizer* recognizer = nullptr;
 
 
 JNIEXPORT void JNICALL Java_com_example_kwang_kaldiandroid_util_KaldiUtil_startEngine
         (JNIEnv *jniEnv, jclass, jstring model_path) {
-    model = new Model(jniEnv->GetStringUTFChars(model_path, 0));
-    recognizer = new Recognizer(model);
+    const char* model_path_chars = jniEnv->GetStringUTFChars(model_path, 0);
+    recognizer = new Recognizer(new Model(model_path_chars));
     LOGE("Start engine", "");
 
 };

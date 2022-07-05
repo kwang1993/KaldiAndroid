@@ -2,6 +2,12 @@
 
 #include <sys/stat.h>
 
+namespace fst {
+
+    static FstRegisterer<StdOLabelLookAheadFst> OLabelLookAheadFst_StdArc_registerer; // HCLr_fst_
+    static FstRegisterer<NGramFst<StdArc>> NGramFst_StdArc_registerer; // Gr_fst_
+
+}  // namespace fst
 
 #include <android/log.h>
 static void KaldiLogHandler(const LogMessageEnvelope &env, const char *message)
@@ -276,11 +282,14 @@ void Model::ReadDataFiles() {
     if (stat(HCLG_fst_rxfilename_.c_str(), &buffer) == 0) {
         KALDI_LOG << "Loading HCLG from " << HCLG_fst_rxfilename_;
         HCLG_fst_ = fst::ReadFstKaldiGeneric(HCLG_fst_rxfilename_); // Create const FST or vector FST
+        assert(HCLG_fst_);
     } else {
-        KALDI_LOG << "Loading HCL and G from " <<HCLr_fst_rxfilename_ << " " << Gr_fst_rxfilename_;
+        KALDI_LOG << "Loading HCL and G from " << HCLr_fst_rxfilename_ << " " << Gr_fst_rxfilename_;
         HCLr_fst_ = fst::StdFst::Read(HCLr_fst_rxfilename_);
         Gr_fst_ = fst::StdFst::Read(Gr_fst_rxfilename_);
         kaldi::ReadIntegerVectorSimple(disambig_tid_int_rxfilename_, &disambig_);
+        assert(HCLr_fst_);
+        assert(Gr_fst_);
     }
 
     // word symbols

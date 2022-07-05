@@ -3,6 +3,7 @@
 #include "language_model.h"
 
 Recognizer::Recognizer(Model *model): model_(model) {
+
     model_->Ref();
 
     // main feature extraction pipeline initiated with OnlineNnet2FeaturePipelineInfo
@@ -21,6 +22,8 @@ Recognizer::Recognizer(Model *model): model_(model) {
             // See nnet3bin/nnet3-latgen-faster-lookahead.cc
             // see DefaultLookAhead in fst/compose.h for details of compose filters
         } else {
+            if (!model_->HCLr_fst_ ) KALDI_ERR << "No HCLr_fst_";
+            if (!model_->Gr_fst_) KALDI_ERR << "No Gr_fst_";
             KALDI_ERR << "Can't create decoding graph";
         }
     }

@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity{
     private StringBuffer sb = new StringBuffer(); // 存储输出文本
     private AudioRecordManager audioRecordManager = new AudioRecordManager();
     private String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Recordings/audio.wav";
-    private String modelPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Recordings/model";
+    private String modelPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/model-android";
     private EditText screen, state;
     private Button replay, delete, clear;
     private ToggleButton startStop;
@@ -88,9 +88,9 @@ public class MainActivity extends AppCompatActivity{
         if (requestCode < permissions.length) {
             if (grantResults.length > 1
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // pass
+                Log.e("mediaRecorder", permissions[requestCode] +" is granted");
             } else {
-                Log.e("mediaRecorder", "Recording permission not found");
+                Log.e("mediaRecorder", permissions[requestCode] +" is not granted");
                 finish();
             }
         }

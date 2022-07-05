@@ -90,6 +90,31 @@ add_library(libkaldi-util SHARED IMPORTED)
 set_target_properties(libkaldi-util PROPERTIES IMPORTED_LOCATION
         ${KALDI_DIR}/lib/${ANDROID_ABI}/libkaldi-util.so)
 
+add_library(libfst SHARED IMPORTED)
+set_target_properties(libfst PROPERTIES IMPORTED_LOCATION
+        ${KALDI_DIR}/lib/${ANDROID_ABI}/fst/libfst.so)
+
+add_library(libfstfar SHARED IMPORTED)
+set_target_properties(libfstfar PROPERTIES IMPORTED_LOCATION
+        ${KALDI_DIR}/lib/${ANDROID_ABI}/fst/libfstfar.so)
+
+add_library(libfstfarscript SHARED IMPORTED)
+set_target_properties(libfstfarscript PROPERTIES IMPORTED_LOCATION
+        ${KALDI_DIR}/lib/${ANDROID_ABI}/fst/libfstfarscript.so)
+
+add_library(libfstlookahead SHARED IMPORTED)
+set_target_properties(libfstlookahead PROPERTIES IMPORTED_LOCATION
+        ${KALDI_DIR}/lib/${ANDROID_ABI}/fst/libfstlookahead.so)
+
+add_library(libfstngram SHARED IMPORTED)
+set_target_properties(libfstngram PROPERTIES IMPORTED_LOCATION
+        ${KALDI_DIR}/lib/${ANDROID_ABI}/fst/libfstngram.so)
+
+add_library(libfstscript SHARED IMPORTED)
+set_target_properties(libfstscript PROPERTIES IMPORTED_LOCATION
+        ${KALDI_DIR}/lib/${ANDROID_ABI}/fst/libfstscript.so)
+
+
 # 自己编写的本地方法类
 add_library(KaldiUtil SHARED
             KaldiUtil.cpp
@@ -125,4 +150,10 @@ target_link_libraries(KaldiUtil
                       libkaldi-transform
                       libkaldi-tree
                       libkaldi-util
+                        libfst
+                        libfstfar
+                        libfstfarscript
+                        libfstlookahead
+                        libfstngram
+                        libfstscript
                       log)
