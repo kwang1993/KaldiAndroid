@@ -92,6 +92,7 @@ public class AudioRecordManager {
                 }
                 if (len > 0) {
                     try {
+                        callback.onRecord(buffer, len); // Kaldi AcceptWaveform
                         for (int i =0 ;i < len; ++i) {
                             dos.writeShort(buffer[i]);
                         }
@@ -110,7 +111,7 @@ public class AudioRecordManager {
                     }
                 }
             }
-            callback.onRecord(buffer, len);
+
         });
     }
     public void startRecording(String filePath, RecordCallback callback) {
