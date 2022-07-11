@@ -477,7 +477,73 @@ const char* Recognizer::FinalResult()
 
 const char* Recognizer::PartialResult()
 {
-    //todo
+    if (state_ != RECOGNIZER_RUNNING) {
+        return StoreEmptyReturn();
+    }
+
+    json::JSON res;
+
+    if (partial_words_) {
+        if (decoder_->NumFramesInLattice() == 0 ) {
+            res["partial"] = "";
+            return StoreReturn(res.dump());
+        }
+        CompactLattice clat, aligned_lat;
+
+        clat = decoder_->GetLattice(decoder_->NumFramesInLattice(), false);
+        //WordAlignLatticePartial
+        WordAlignLattice(clat,
+                        *model_->trans_model_,
+                        *model_->word_boundary_info_,
+                        0,
+                        &aligned_lat);
+
+        MinimumBayesRisk mbr(aligned_lat);
+        const vector<BaseFloat> &conf = mbr.GetOneBestConfidences();
+        const vector<int32> &words = mbr.GetOneBest();
+        const vector<pair<BaseFloat, BaseFloat> > &times = mbr.GetOneBestTimes();
+
+        int size = words.size();
+
+        stringstream text;
+
+        // Create JSON object
+        for (int i = 0; i < size; i++) {
+            json::JSON word;
+
+            word["word"] = model_->word_syms_->Find(words[i]);
+            word["start"] = samples_round_start_ / sampling_frequency_ + (frame_offset_ + times[i].first) * 0.03;
+            word["end"] = samples_round_start_ / sampling_frequency_ + (frame_offset_ + times[i].second) * 0.03;
+            word["conf"] = conf[i];
+            res["partial_result"].append(word);
+
+            if (i) {
+                text << " ";
+            }
+            text << model_->word_syms_->Find(words[i]);
+        }
+        res["partial"] = text.str();
+    } else {
+        if (decoder_->NumFramesDecoded() == 0) {
+            res["partial"] = "";
+            return StoreReturn(res.dump());
+        }
+        Lattice lat;
+        decoder_->GetBestPath(false, &lat);
+        vector <kaldi::int32> alignment, words;
+        LatticeWeight weight;
+        fst::GetLinearSymbolSequence(lat, &alignment, &words, &weight);
+        ostringstream text;
+        for (size_t i = 0; i < words.size(); ++i) {
+            if (i) {
+                text << " ";
+            }
+            text << model_->word_syms_->Find(words[i]);
+        }
+        res["partial"] = text.str();
+    }
+    return StoreReturn(res.dump());
+
 }
 
 void Recognizer::Reset()

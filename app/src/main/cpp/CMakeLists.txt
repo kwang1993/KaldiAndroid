@@ -117,7 +117,7 @@ set_target_properties(libfstscript PROPERTIES IMPORTED_LOCATION
 
 # 自己编写的本地方法类
 add_library(KaldiUtil SHARED
-            KaldiUtil.cpp
+            kwang_api.cpp
             model.cpp
             recognizer.cpp) # 相对CMakeLists.txt的路径
 target_include_directories(KaldiUtil PRIVATE

@@ -107,22 +107,23 @@ public class MainActivity extends AppCompatActivity{
     }
     private void stopRecognition() {
         audioRecordManager.stopRecording();
-        KaldiUtil.stopRecognition();
+        //KaldiUtil.stopRecognition();
         updateButtonState(ButtonState.IDLE);
         updateState("Recording stopped: " + filePath);
     }
     private void startEngine(){
         getPermissions();
-        KaldiUtil.startEngine(modelPath);
+        //KaldiUtil.startEngine(modelPath);
         updateState("Engine started!");
     }
     private void stopEngine(){
-        KaldiUtil.stopEngine();
+        //KaldiUtil.stopEngine();
         updateState("Engine stopped!");
     }
 
-    private String getResultString(){
-        return KaldiUtil.getResultString();
+    private String getResultString() {
+        //return KaldiUtil.getResultString();
+        return "";
     }
 
     private void startScreenLogging() {
