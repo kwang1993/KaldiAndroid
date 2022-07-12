@@ -26,7 +26,11 @@ import com.example.kwang.kaldiandroid.audiorecord.AudioParams;
 import com.example.kwang.kaldiandroid.audiorecord.AudioRecordManager;
 import com.example.kwang.kaldiandroid.audiorecord.KaldiRecordCallback;
 import com.example.kwang.kaldiandroid.audiorecord.RecordCallback;
+import com.example.kwang.kaldiandroid.services.RecognitionListener;
+import com.example.kwang.kaldiandroid.services.SpeechService;
 import com.example.kwang.kaldiandroid.util.KaldiUtil;
+import com.example.kwang.kaldiandroid.util.Model;
+import com.example.kwang.kaldiandroid.util.Recognizer;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -38,7 +42,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity implements RecognitionListener  {
 
     private Handler textHandler = new Handler(); // 通知有输出文本要显示
     private StringBuffer sb = new StringBuffer(); // 存储输出文本
@@ -48,6 +52,39 @@ public class MainActivity extends AppCompatActivity{
     private EditText screen, state;
     private Button replay, delete, clear;
     private ToggleButton startStop;
+
+    private SpeechService speechService;
+
+    @Override
+    public void onPartialResult(String hypothesis) {
+        sb.append(hypothesis);
+        screen.setText(sb.toString());
+    }
+
+    @Override
+    public void onResult(String hypothesis) {
+        sb.append(hypothesis);
+        screen.setText(sb.toString());
+    }
+
+    @Override
+    public void onFinalResult(String hypothesis) {
+        sb.append(hypothesis);
+        screen.setText(sb.toString());
+    }
+
+    @Override
+    public void onError(Exception exception) {
+        updateState(exception.getMessage());
+    }
+
+    @Override
+    public void onTimeout() {
+
+        speechService.cancel();
+        speechService = null;
+        updateState("Timeout!");
+    }
 
     private enum ButtonState {
         IDLE, RECORDING, REPLAY, DELETE
@@ -101,7 +138,7 @@ public class MainActivity extends AppCompatActivity{
 
     private void startRecognition() {
         updateButtonState(ButtonState.RECORDING);
-        audioRecordManager.startRecording(filePath, new KaldiRecordCallback());
+        audioRecordManager.startRecording(filePath, new KaldiRecordCallback(modelPath));
         updateState("Recording started: " + filePath);
 
     }
@@ -121,33 +158,33 @@ public class MainActivity extends AppCompatActivity{
         updateState("Engine stopped!");
     }
 
-    private String getResultString() {
-        //return KaldiUtil.getResultString();
-        return "";
-    }
+//    private String getResultString() {
+//        //return KaldiUtil.getResultString();
+//        return "";
+//    }
 
-    private void startScreenLogging() {
-        Thread textThread = new Thread(() -> {
-            while (startStop.getText() == startStop.getTextOn()) {
-                try {
-                    sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                String text = getResultString();
-                if (!text.equals("")) {
-                    sb.append(text);
-                    textHandler.post(() -> screen.setText(sb.toString()));
-                }
-            }
-        });
-        textThread.start();
-    }
+//    private void startScreenLogging() {
+//        Thread textThread = new Thread(() -> {
+//            while (startStop.getText() == startStop.getTextOn()) {
+//                try {
+//                    sleep(100);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                String text = getResultString();
+//                if (!text.equals("")) {
+//                    sb.append(text);
+//                    textHandler.post(() -> screen.setText(sb.toString()));
+//                }
+//            }
+//        });
+//        textThread.start();
+//    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopRecognition();
-        stopEngine();
+        speechService.cancel();
+        speechService.shutdown();
     }
 
     private void initLayout() {
@@ -211,7 +248,7 @@ public class MainActivity extends AppCompatActivity{
             public void onClick(View view) {
                 if (startStop.getText() == startStop.getTextOn()) {
                     startRecognition();
-                    startScreenLogging();
+                    //startScreenLogging();
                 }
                 else {
                     stopRecognition();
