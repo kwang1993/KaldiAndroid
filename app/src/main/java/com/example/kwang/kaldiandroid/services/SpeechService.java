@@ -22,10 +22,10 @@ public class SpeechService {
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-
+    // init recorder
     public SpeechService(Recognizer recognizer, int sampleRate) throws IOException {
         this.recognizer = recognizer;
-        this.sampleRate = (int) sampleRate;
+        this.sampleRate = sampleRate;
         bufferSize = Math.round (this.sampleRate * BUFFER_SIZE_SECONDS);
         recorder = new AudioRecord(
                 MediaRecorder.AudioSource.VOICE_RECOGNITION,
@@ -46,23 +46,19 @@ public class SpeechService {
     }
 
     public boolean startListening(RecognitionListener listener) {
-        if (null != recognizerThread) {
-            return false; // 0 means error
+        if (recognizerThread != null) {
+            return false; // in use
         }
         recognizerThread = new RecognizerThread(listener);
         recognizerThread.start();
         return true;
     }
 
-    private boolean stop() {
+    public boolean stopListening() {
         return stopRecognizerThread();
     }
-    public boolean cancel() {
-        if (recognizerThread != null) {
-            recognizerThread.setPause(true);
-        }
-        return stopRecognizerThread();
-    }
+
+    // release recorder
     public void shutdown() {
         recorder.release();
     }
@@ -70,6 +66,13 @@ public class SpeechService {
         if (recognizerThread != null) {
             recognizerThread.setPause(paused);
         }
+    }
+
+    public boolean cancel() {
+        if (recognizerThread != null) {
+            recognizerThread.setPause(true); // Skip acceptWaveform and getResult
+        }
+        return stopRecognizerThread();
     }
     public void reset() {
         if (recognizerThread != null) {

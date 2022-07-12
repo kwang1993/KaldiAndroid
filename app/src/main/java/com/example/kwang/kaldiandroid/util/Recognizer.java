@@ -8,6 +8,10 @@ public class Recognizer extends PointerType implements AutoCloseable {
         super(KaldiUtil.kwang_recognizer_new(model));
     }
 
+    public boolean acceptWaveForm(byte[] data, int len) {
+        return KaldiUtil.kwang_recognizer_accept_waveform(this.getPointer(), data, len);
+    }
+
     public boolean acceptWaveForm(short[] data, int len) {
         return KaldiUtil.kwang_recognizer_accept_waveform_s(this.getPointer(), data, len);
     }

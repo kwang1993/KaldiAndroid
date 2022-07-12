@@ -48,6 +48,15 @@ void kwang_recognizer_reset(VRecognizer *recognizer)
     ((Recognizer *)recognizer)->Reset();
 }
 
+int kwang_recognizer_accept_waveform(VRecognizer *recognizer, const char *data, int length)
+{
+    try {
+        return ((Recognizer *)(recognizer))->AcceptWaveform(data, length);
+    } catch (...) {
+        return -1;
+    }
+}
+
 int kwang_recognizer_accept_waveform_s(VRecognizer *recognizer, const short *data, int length)
 {
     try {

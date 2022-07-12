@@ -20,6 +20,7 @@ public class KaldiUtil {
     public static native Pointer kwang_recognizer_new(Model model);
     public static native void kwang_recognizer_free(Pointer recognizer);
     public static native void kwang_recognizer_reset(Pointer recognizer);
+    public static native boolean kwang_recognizer_accept_waveform(Pointer recognizer, byte[] data, int len);
     public static native boolean kwang_recognizer_accept_waveform_s(Pointer recognizer, short[] data, int len);
     public static native String kwang_recognizer_result(Pointer recognizer);
     public static native String kwang_recognizer_final_result(Pointer recognizer);

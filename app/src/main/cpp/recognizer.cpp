@@ -73,7 +73,15 @@ void Recognizer::InitRescoring() { // ?????
         }
     }
 }
-
+bool Recognizer::AcceptWaveform(const char *data, int len)
+{
+    Vector<BaseFloat> wave;
+    wave.Resize(len / 2, kUndefined);
+    for (int i = 0; i < len / 2; i++){
+        wave(i) = *(((short *)data) + i);
+    }
+    return AcceptWaveform(wave);
+}
 bool Recognizer::AcceptWaveform(const short *sdata, int len) {
     Vector<BaseFloat> wave;
     wave.Resize(len, kUndefined);

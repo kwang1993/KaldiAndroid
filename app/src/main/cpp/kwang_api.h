@@ -21,6 +21,7 @@ VRecognizer *kwang_recognizer_new(VModel *model);
 void kwang_recognizer_free(VRecognizer *recognizer);
 void kwang_recognizer_reset(VRecognizer *recognizer);
 
+int kwang_recognizer_accept_waveform(VRecognizer *recognizer, const char *data, int length);
 int kwang_recognizer_accept_waveform_s(VRecognizer *recognizer, const short *data, int length);
 
 const char *kwang_recognizer_result(VRecognizer *recognizer);

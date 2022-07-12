@@ -18,6 +18,7 @@ enum RecognizerState {
 class Recognizer {
 public:
     Recognizer(Model *model);
+    bool AcceptWaveform(const char* sdata, int len);
     bool AcceptWaveform(const short* sdata, int len);
     const char* Result();
     const char* FinalResult();
