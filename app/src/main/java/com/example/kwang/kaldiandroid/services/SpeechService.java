@@ -6,7 +6,6 @@ import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.example.kwang.kaldiandroid.audiorecord.AudioRecordManager;
 import com.example.kwang.kaldiandroid.util.Recognizer;
 
 import java.io.IOException;
@@ -17,6 +16,7 @@ public class SpeechService {
     private final static float BUFFER_SIZE_SECONDS = 0.2f;
     private final int bufferSize;
     private final AudioRecord recorder;
+    private final static int DEFAULT_SAMPLE_RATE = 16000;
 
     private RecognizerThread recognizerThread;
 
@@ -42,7 +42,7 @@ public class SpeechService {
     }
 
     public SpeechService(Recognizer recognizer) throws IOException {
-        this(recognizer, 16000);
+        this(recognizer, DEFAULT_SAMPLE_RATE);
     }
 
     public boolean startListening(RecognitionListener listener) {
@@ -94,6 +94,9 @@ public class SpeechService {
         return true;
     }
 
+    public AudioRecord getRecorder() {
+        return this.recorder;
+    }
 
 
     private final class RecognizerThread extends Thread {

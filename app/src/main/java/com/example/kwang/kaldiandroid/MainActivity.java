@@ -3,16 +3,10 @@ package com.example.kwang.kaldiandroid;
 import static java.lang.Thread.sleep;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioRecord;
-import android.media.AudioTrack;
-import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -22,31 +16,21 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ToggleButton;
 
-import com.example.kwang.kaldiandroid.audiorecord.AudioParams;
-import com.example.kwang.kaldiandroid.audiorecord.AudioRecordManager;
-import com.example.kwang.kaldiandroid.audiorecord.KaldiRecordCallback;
-import com.example.kwang.kaldiandroid.audiorecord.RecordCallback;
+import com.example.kwang.kaldiandroid.audiorecord.RecordingService;
 import com.example.kwang.kaldiandroid.services.RecognitionListener;
 import com.example.kwang.kaldiandroid.services.SpeechService;
-import com.example.kwang.kaldiandroid.util.KaldiUtil;
 import com.example.kwang.kaldiandroid.util.Model;
 import com.example.kwang.kaldiandroid.util.Recognizer;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
 
 
 public class MainActivity extends AppCompatActivity implements RecognitionListener  {
 
     private Handler textHandler = new Handler(); // 通知有输出文本要显示
     private StringBuffer sb = new StringBuffer(); // 存储输出文本
-    private AudioRecordManager audioRecordManager = new AudioRecordManager();
+    private RecordingService recordingService = new RecordingService();
     private String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Recordings/audio.wav";
     private String modelPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/model-android";
     private EditText screen, state;
@@ -81,9 +65,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     @Override
     public void onTimeout() {
 
-        speechService.cancel();
-        speechService = null;
-        updateState("Timeout!");
     }
 
     private enum ButtonState {
@@ -138,12 +119,14 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     private void startRecognition() {
         updateButtonState(ButtonState.RECORDING);
-        audioRecordManager.startRecording(filePath, new KaldiRecordCallback(modelPath));
+        recordingService.startRecording(filePath);
+        speechService.startListening(this);
         updateState("Recording started: " + filePath);
 
     }
     private void stopRecognition() {
-        audioRecordManager.stopRecording();
+        recordingService.stopRecording();
+        speechService.stopListening();
         //KaldiUtil.stopRecognition();
         updateButtonState(ButtonState.IDLE);
         updateState("Recording stopped: " + filePath);
@@ -151,10 +134,18 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     private void startEngine(){
         getPermissions();
         //KaldiUtil.startEngine(modelPath);
+        try {
+            speechService = new SpeechService(new Recognizer(new Model(modelPath)));
+            recordingService.setRecorder(speechService.getRecorder());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         updateState("Engine started!");
     }
     private void stopEngine(){
         //KaldiUtil.stopEngine();
+        speechService.cancel();
+        speechService.shutdown();
         updateState("Engine stopped!");
     }
 
@@ -220,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             public void onClick(View view) {
                 File f = new File(filePath);
                 if (f.exists()){
-                    audioRecordManager.replay(filePath);
+                    recordingService.replay(filePath);
                     updateState("Replayed audio: " + filePath);
                 } else{
                     updateState("No audio to replay: " + filePath);

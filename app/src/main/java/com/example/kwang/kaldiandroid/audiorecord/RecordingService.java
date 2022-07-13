@@ -10,6 +10,9 @@ import android.media.MediaRecorder;
 import android.telecom.Call;
 import android.util.Log;
 
+import com.example.kwang.kaldiandroid.audiorecord.AudioParams;
+import com.example.kwang.kaldiandroid.audiorecord.RecordCallback;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -21,7 +24,7 @@ import java.io.IOException;
 
 import androidx.core.app.ActivityCompat;
 
-public class AudioRecordManager {
+public class RecordingService {
     private AudioParams DEFAULT_FORMAT = new AudioParams(16000, 1, 16);
     private AudioRecord recorder = null;
     private Thread recordThread = null;
@@ -70,7 +73,7 @@ public class AudioRecordManager {
         }
     }
 
-    public void startRecording(String filePath, AudioParams params, RecordCallback callback) {
+    public void startRecording(String filePath, AudioParams params) {
         int channelCount = params.getChannelCount();
         int bits = params.getBits();
         boolean bStoreFile = filePath != null && !filePath.isEmpty();
@@ -92,7 +95,6 @@ public class AudioRecordManager {
                 }
                 if (len > 0) {
                     try {
-                        callback.onRecord(buffer, len); // Kaldi AcceptWaveform
                         for (int i =0 ;i < len; ++i) {
                             dos.writeShort(buffer[i]);
                         }
@@ -114,8 +116,8 @@ public class AudioRecordManager {
 
         });
     }
-    public void startRecording(String filePath, RecordCallback callback) {
-        startRecording(filePath, DEFAULT_FORMAT, callback);
+    public void startRecording(String filePath) {
+        startRecording(filePath, DEFAULT_FORMAT);
     }
 
     public void stopRecording() {
@@ -154,5 +156,9 @@ public class AudioRecordManager {
 
     public void replay(String filePath) {
         replay(filePath, DEFAULT_FORMAT);
+    }
+
+    public void setRecorder(AudioRecord recorder) {
+        this.recorder = recorder;
     }
 }

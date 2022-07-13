@@ -433,7 +433,8 @@ const char *Recognizer::NlsmlResult(CompactLattice &clat){
 
 const char *Recognizer::StoreEmptyReturn() {
     if (!max_alternatives_) {
-        return StoreReturn("{\"text\": \"\"}");
+//        return StoreReturn("{\"text\": \"\"}");
+        return StoreReturn("");
     } else if (nlsml_) {
         return StoreReturn("<?xml version=\"1.0\"?>\n"
                            "<result grammar=\"default\">\n"
