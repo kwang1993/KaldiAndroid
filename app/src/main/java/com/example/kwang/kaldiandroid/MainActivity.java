@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     private Handler textHandler = new Handler(); // 通知有输出文本要显示
     private StringBuffer sb = new StringBuffer(); // 存储输出文本
-    private RecordingService recordingService = new RecordingService();
+    //private RecordingService recordingService = new RecordingService();
     private String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Recordings/audio.wav";
     private String modelPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/model-android";
     private EditText screen, state;
@@ -41,20 +41,21 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     @Override
     public void onPartialResult(String hypothesis) {
-        sb.append(hypothesis);
-        screen.setText(sb.toString());
+//        sb.append(hypothesis);
+        if (hypothesis != "")
+            screen.setText(hypothesis);
     }
 
     @Override
     public void onResult(String hypothesis) {
-        sb.append(hypothesis);
-        screen.setText(sb.toString());
+        if (hypothesis != "")
+            screen.setText(hypothesis);
     }
 
     @Override
     public void onFinalResult(String hypothesis) {
-        sb.append(hypothesis);
-        screen.setText(sb.toString());
+        if (hypothesis != "")
+            screen.setText(hypothesis);
     }
 
     @Override
@@ -119,13 +120,13 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     private void startRecognition() {
         updateButtonState(ButtonState.RECORDING);
-        recordingService.startRecording(filePath);
-        speechService.startListening(this);
+        //recordingService.startRecording(filePath);
+        speechService.startListening(this, filePath);
         updateState("Recording started: " + filePath);
 
     }
     private void stopRecognition() {
-        recordingService.stopRecording();
+        //recordingService.stopRecording();
         speechService.stopListening();
         //KaldiUtil.stopRecognition();
         updateButtonState(ButtonState.IDLE);
@@ -136,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         //KaldiUtil.startEngine(modelPath);
         try {
             speechService = new SpeechService(new Recognizer(new Model(modelPath)));
-            recordingService.setRecorder(speechService.getRecorder());
+            //recordingService.setRecorder(speechService.getRecorder());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -211,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
             public void onClick(View view) {
                 File f = new File(filePath);
                 if (f.exists()){
-                    recordingService.replay(filePath);
+                    speechService.replay(filePath);
                     updateState("Replayed audio: " + filePath);
                 } else{
                     updateState("No audio to replay: " + filePath);

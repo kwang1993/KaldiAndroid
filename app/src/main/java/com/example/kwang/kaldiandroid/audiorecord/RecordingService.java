@@ -1,17 +1,13 @@
 package com.example.kwang.kaldiandroid.audiorecord;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
-import android.telecom.Call;
 import android.util.Log;
 
-import com.example.kwang.kaldiandroid.audiorecord.AudioParams;
-import com.example.kwang.kaldiandroid.audiorecord.RecordCallback;
+import com.example.kwang.kaldiandroid.services.RecordListener;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -22,8 +18,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import androidx.core.app.ActivityCompat;
-
 public class RecordingService {
     private AudioParams DEFAULT_FORMAT = new AudioParams(16000, 1, 16);
     private AudioRecord recorder = null;
@@ -33,7 +27,7 @@ public class RecordingService {
 
 
     @SuppressLint("MissingPermission")
-    private void startRecording(AudioParams params, RecordCallback callback) {
+    private void startRecording(AudioParams params, RecordListener callback) {
         int sampleRate = params.getSampleRate();
         int channelConfig = params.getChannelConfig();
         int audioFormat = params.getEncodingFormat();

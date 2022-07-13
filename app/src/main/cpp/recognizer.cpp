@@ -364,7 +364,8 @@ const char *Recognizer::NbestResult(CompactLattice &clat){
         entry["confidence"] = likelihood;
         obj["alternatives"].append(entry);
     }
-    return StoreReturn(obj.dump());
+    //return StoreReturn(obj.dump());
+    return StoreReturn(obj["text"].ToString());
 }
 
 const char *Recognizer::MbrResult(CompactLattice &rlat){
@@ -420,7 +421,8 @@ const char *Recognizer::MbrResult(CompactLattice &rlat){
 //            }
 //        }
 
-        return StoreReturn(obj.dump());
+        //return StoreReturn(obj.dump());
+        return StoreReturn(obj["text"].ToString());
     }
 
 }
@@ -495,7 +497,8 @@ const char* Recognizer::PartialResult()
     if (partial_words_) {
         if (decoder_->NumFramesInLattice() == 0 ) {
             res["partial"] = "";
-            return StoreReturn(res.dump());
+            //return StoreReturn(res.dump());
+            return StoreReturn(res["partial"].ToString());
         }
         CompactLattice clat, aligned_lat;
 
@@ -535,7 +538,8 @@ const char* Recognizer::PartialResult()
     } else {
         if (decoder_->NumFramesDecoded() == 0) {
             res["partial"] = "";
-            return StoreReturn(res.dump());
+            //return StoreReturn(res.dump());
+            return StoreReturn(res["partial"].ToString());
         }
         Lattice lat;
         decoder_->GetBestPath(false, &lat);
@@ -551,7 +555,8 @@ const char* Recognizer::PartialResult()
         }
         res["partial"] = text.str();
     }
-    return StoreReturn(res.dump());
+    //return StoreReturn(res.dump());
+    return StoreReturn(res["partial"].ToString());
 
 }
 
