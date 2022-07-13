@@ -16,7 +16,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ToggleButton;
 
-import com.example.kwang.kaldiandroid.audiorecord.RecordingService;
 import com.example.kwang.kaldiandroid.services.RecognitionListener;
 import com.example.kwang.kaldiandroid.services.SpeechService;
 import com.example.kwang.kaldiandroid.util.Model;
