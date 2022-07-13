@@ -2,6 +2,7 @@
 #include "json.h"
 #include "language_model.h"
 
+
 Recognizer::Recognizer(Model *model): model_(model) {
 
     model_->Ref();

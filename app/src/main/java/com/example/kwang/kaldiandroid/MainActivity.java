@@ -29,7 +29,6 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity implements RecognitionListener  {
 
     private Handler textHandler = new Handler(); // 通知有输出文本要显示
-    private StringBuffer sb = new StringBuffer(); // 存储输出文本
     //private RecordingService recordingService = new RecordingService();
     private String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Recordings/audio.wav";
     private String modelPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/model-android";
@@ -41,7 +40,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     @Override
     public void onPartialResult(String hypothesis) {
-//        sb.append(hypothesis);
         if (hypothesis != "")
             screen.setText(hypothesis);
     }
@@ -145,8 +143,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     }
     private void stopEngine(){
         //KaldiUtil.stopEngine();
-        speechService.cancel();
-        speechService.shutdown();
+        speechService.release();
         updateState("Engine stopped!");
     }
 
@@ -165,8 +162,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 //                }
 //                String text = getResultString();
 //                if (!text.equals("")) {
-//                    sb.append(text);
-//                    textHandler.post(() -> screen.setText(sb.toString()));
+//                    textHandler.post(() -> screen.append(text));
 //                }
 //            }
 //        });
@@ -175,8 +171,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        speechService.cancel();
-        speechService.shutdown();
+        stopEngine();
     }
 
     private void initLayout() {
@@ -226,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         clear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sb = new StringBuffer();
+
                 screen.setText("");
                 updateState("Screen cleared!");
             }

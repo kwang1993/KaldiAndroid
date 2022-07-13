@@ -7,7 +7,7 @@ import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.util.Log;
 
-import com.example.kwang.kaldiandroid.services.RecordListener;
+import com.example.kwang.kaldiandroid.services.RecordingListener;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -27,7 +27,7 @@ public class RecordingService {
 
 
     @SuppressLint("MissingPermission")
-    private void startRecording(AudioParams params, RecordListener callback) {
+    private void startRecording(AudioParams params, RecordingListener callback) {
         int sampleRate = params.getSampleRate();
         int channelConfig = params.getChannelConfig();
         int audioFormat = params.getEncodingFormat();
@@ -152,7 +152,5 @@ public class RecordingService {
         replay(filePath, DEFAULT_FORMAT);
     }
 
-    public void setRecorder(AudioRecord recorder) {
-        this.recorder = recorder;
-    }
+
 }

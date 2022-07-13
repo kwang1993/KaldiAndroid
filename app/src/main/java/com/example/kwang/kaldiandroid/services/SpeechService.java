@@ -8,7 +8,6 @@ import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.example.kwang.kaldiandroid.audiorecord.AudioParams;
 import com.example.kwang.kaldiandroid.util.Recognizer;
 
 import java.io.BufferedInputStream;
@@ -23,10 +22,10 @@ import java.io.IOException;
 public class SpeechService {
     private final Recognizer recognizer;
     private final int sampleRate;
-    private final static float BUFFER_SIZE_SECONDS = 0.2f;
     private final int bufferSize;
     private final AudioRecord recorder;
     private final static int DEFAULT_SAMPLE_RATE = 16000;
+    private boolean bRecording;
 
     private RecognizerThread recognizerThread;
 
@@ -36,9 +35,12 @@ public class SpeechService {
     public SpeechService(Recognizer recognizer, int sampleRate) throws IOException {
         this.recognizer = recognizer;
         this.sampleRate = sampleRate;
-        bufferSize = Math.round (this.sampleRate * BUFFER_SIZE_SECONDS);
+        bufferSize = AudioRecord.getMinBufferSize(
+                this.sampleRate,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT);
         recorder = new AudioRecord(
-                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                MediaRecorder.AudioSource.MIC,
                 this.sampleRate,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
@@ -65,14 +67,17 @@ public class SpeechService {
         }
         recognizerThread = new RecognizerThread(listener, filePath);
         recognizerThread.start();
+        bRecording = true;
         return true;
     }
     public boolean stopListening() {
-        return stopRecognizerThread();
+        bRecording = false;
+        return true;
+        // return stopRecognizerThread();
     }
 
     // release recorder
-    public void shutdown() {
+    public void release() {
         recorder.release();
     }
     public void setPause(boolean paused) {
@@ -85,7 +90,8 @@ public class SpeechService {
         if (recognizerThread != null) {
             recognizerThread.setPause(true); // Skip acceptWaveform and getResult
         }
-        return stopRecognizerThread();
+        //return stopRecognizerThread();
+        return true;
     }
     public void reset() {
         if (recognizerThread != null) {
@@ -93,23 +99,19 @@ public class SpeechService {
         }
     }
 
-    private boolean stopRecognizerThread() {
-        if (null == recognizerThread)
-            return false;
-        try {
-            recognizerThread.interrupt();
-            recognizerThread.join();
-        } catch (InterruptedException e) {
-            // Restore the interrupted status.
-            Thread.currentThread().interrupt();
-        }
-        recognizerThread = null;
-        return true;
-    }
-
-    public AudioRecord getRecorder() {
-        return this.recorder;
-    }
+//    private boolean stopRecognizerThread() {
+//        if (null == recognizerThread)
+//            return false;
+//        try {
+//            recognizerThread.interrupt();
+//            recognizerThread.join();
+//        } catch (InterruptedException e) {
+//            // Restore the interrupted status.
+//            Thread.currentThread().interrupt();
+//        }
+//        recognizerThread = null;
+//        return true;
+//    }
 
     public void replay(String filePath) {
         File file = new File(filePath);
@@ -129,8 +131,10 @@ public class SpeechService {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                    DEFAULT_SAMPLE_RATE, AudioFormat.CHANNEL_OUT_MONO,
+            AudioTrack audioTrack = new AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    DEFAULT_SAMPLE_RATE,
+                    AudioFormat.CHANNEL_OUT_MONO,
                     AudioFormat.ENCODING_PCM_16BIT,
                     musicLength * 2,
                     AudioTrack.MODE_STREAM
@@ -141,7 +145,7 @@ public class SpeechService {
         }
     }
 
-    private final class RecognizerThread extends Thread implements RecordListener {
+    private final class RecognizerThread extends Thread implements RecordingListener {
         private int remainingSamples;
         private final int timeoutSamples;
         private final static int NO_TIMEOUT = -1;
@@ -150,6 +154,7 @@ public class SpeechService {
         private final String filePath;
         RecognitionListener listener;
         private DataOutputStream dos = null;
+        private boolean bStoreFile;
 
         public RecognizerThread(RecognitionListener listener) {
             this(listener, NO_TIMEOUT, null);
@@ -168,6 +173,8 @@ public class SpeechService {
             this.remainingSamples = this.timeoutSamples;
 
             this.filePath = filePath;
+
+            this.bStoreFile = filePath != null && !filePath.isEmpty();
         }
 
         public void setPause(boolean paused) {
@@ -181,8 +188,6 @@ public class SpeechService {
         @Override
         public void run() {
 
-            boolean bStoreFile = filePath != null && !filePath.isEmpty();
-
             recorder.startRecording();
             if (recorder.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED) {
                 recorder.stop();
@@ -192,7 +197,7 @@ public class SpeechService {
             }
             short[] buffer = new short[bufferSize];
 
-            while (!interrupted()
+            while (bRecording // && !interrupted()
                     && ((timeoutSamples == NO_TIMEOUT) || (remainingSamples > 0))) {
                 int nread = recorder.read(buffer, 0, buffer.length);
 
@@ -244,7 +249,6 @@ public class SpeechService {
 
         @Override
         public void onRecord(short[] buffer, int len) {
-            boolean bStoreFile = filePath != null && !filePath.isEmpty();
             if (bStoreFile) {
                 if (dos == null) {
                     File f = new File(filePath);
@@ -273,6 +277,7 @@ public class SpeechService {
 //                        file.seek(0);
 //                        file.write(getWaveFileHeader(fileLen, params.getSampleRate(), channelCount, bits));
                         dos.close();
+                        dos = null;
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

@@ -1,5 +1,5 @@
 package com.example.kwang.kaldiandroid.services;
 
-public interface RecordListener {
+public interface RecordingListener {
     void onRecord(short[] buffer, int len);
 }
