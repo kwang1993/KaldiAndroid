@@ -400,8 +400,10 @@ const char *Recognizer::MbrResult(CompactLattice &rlat){
 
         if (words_) {
             word["word"] = model_->word_syms_->Find(words[i]);
-            word["start"] = samples_round_start_ / sampling_frequency_ + (frame_offset_ + times[i].first) * 0.03;
-            word["end"] = samples_round_start_ / sampling_frequency_ + (frame_offset_ + times[i].second) * 0.03;
+            word["start"] = samples_round_start_ / sampling_frequency_ +
+                            (frame_offset_ + times[i].first) * 0.03;
+            word["end"] = samples_round_start_ / sampling_frequency_ +
+                          (frame_offset_ + times[i].second) * 0.03;
             word["conf"] = conf[i];
             obj["result"].append(word);
         }
@@ -409,7 +411,8 @@ const char *Recognizer::MbrResult(CompactLattice &rlat){
             text << " ";
         }
         text << model_->word_syms_->Find(words[i]);
-        obj["text"] = text.str();
+    }
+    obj["text"] = text.str();
 
 //        if (spk_model_) {
 //            Vector<BaseFloat> xvector;
@@ -422,9 +425,9 @@ const char *Recognizer::MbrResult(CompactLattice &rlat){
 //            }
 //        }
 
-        //return StoreReturn(obj.dump());
-        return StoreReturn(obj["text"].ToString());
-    }
+
+    //return StoreReturn(obj.dump());
+    return StoreReturn(obj["text"].ToString());
 
 }
 

@@ -40,19 +40,19 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
 
     @Override
     public void onPartialResult(String hypothesis) {
-        if (hypothesis != "")
+        if (!hypothesis.isEmpty())
             screen.setText(hypothesis);
     }
 
     @Override
     public void onResult(String hypothesis) {
-        if (hypothesis != "")
+        if (!hypothesis.isEmpty())
             screen.setText(hypothesis);
     }
 
     @Override
     public void onFinalResult(String hypothesis) {
-        if (hypothesis != "")
+        if (!hypothesis.isEmpty())
             screen.setText(hypothesis);
     }
 
@@ -221,7 +221,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionListen
         clear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 screen.setText("");
                 updateState("Screen cleared!");
             }

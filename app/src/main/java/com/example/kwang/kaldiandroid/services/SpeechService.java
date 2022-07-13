@@ -25,7 +25,6 @@ public class SpeechService {
     private final int bufferSize;
     private final AudioRecord recorder;
     private final static int DEFAULT_SAMPLE_RATE = 16000;
-    private boolean bRecording;
 
     private RecognizerThread recognizerThread;
 
@@ -67,13 +66,10 @@ public class SpeechService {
         }
         recognizerThread = new RecognizerThread(listener, filePath);
         recognizerThread.start();
-        bRecording = true;
         return true;
     }
     public boolean stopListening() {
-        bRecording = false;
-        return true;
-        // return stopRecognizerThread();
+        return stopRecognizerThread();
     }
 
     // release recorder
@@ -90,28 +86,28 @@ public class SpeechService {
         if (recognizerThread != null) {
             recognizerThread.setPause(true); // Skip acceptWaveform and getResult
         }
-        //return stopRecognizerThread();
-        return true;
+        return stopRecognizerThread();
     }
+
     public void reset() {
         if (recognizerThread != null) {
             recognizerThread.reset();
         }
     }
 
-//    private boolean stopRecognizerThread() {
-//        if (null == recognizerThread)
-//            return false;
-//        try {
-//            recognizerThread.interrupt();
-//            recognizerThread.join();
-//        } catch (InterruptedException e) {
-//            // Restore the interrupted status.
-//            Thread.currentThread().interrupt();
-//        }
-//        recognizerThread = null;
-//        return true;
-//    }
+    private boolean stopRecognizerThread() {
+        if (null == recognizerThread)
+            return false;
+        try {
+            recognizerThread.interrupt();
+            recognizerThread.join();
+        } catch (InterruptedException e) {
+            // Restore the interrupted status.
+            Thread.currentThread().interrupt();
+        }
+        recognizerThread = null; // necessary to release hold of file
+        return true;
+    }
 
     public void replay(String filePath) {
         File file = new File(filePath);
@@ -197,7 +193,7 @@ public class SpeechService {
             }
             short[] buffer = new short[bufferSize];
 
-            while (bRecording // && !interrupted()
+            while (!interrupted()
                     && ((timeoutSamples == NO_TIMEOUT) || (remainingSamples > 0))) {
                 int nread = recorder.read(buffer, 0, buffer.length);
 
